@@ -7,9 +7,9 @@ This fork, based on d0k3's own fork of Decrypt9, adds a very niche set of featur
 
 ## Full list of features
 
-*Supports TWL and CTR type1 developer cartridges
-*Reading, Writing, Erasing and Verifing
-*Allows for the writing of, in addition of dev-signed executables, unsigned and retail-signed executables (see notes for compatibility)
+* Supports TWL and CTR type1 developer cartridges
+* Reading, Writing, Erasing and Verifing
+* Allows for the writing of, in addition of dev-signed executables, unsigned and retail-signed executables (see notes for compatibility)
 
 ## Some things to know
 
