@@ -1,6 +1,31 @@
 # Decrypt9
 _Multipurpose content dumper and decryptor for the Nintendo 3DS_
 
+## XLuma's Decrypt9WIP Fork
+
+This fork, based on d0k3's own fork of Decrypt9, adds a very niche set of features to communicate with developer cartridges made by Nintendo. With this fork, you can write software to a developer cartridge. Options can be found under Gamecart, labelled "Devcart operations".
+
+## Full list of features
+
+*Supports TWL and CTR type1 developer cartridges
+*Reading, Writing, Erasing and Verifing
+*Allows for the writing of, in addition of dev-signed executables, unsigned and retail-signed executables (see notes for compatibility)
+
+## Some things to know
+
+* This only allows to write your own software and make a use out of developer cartridges, it doesnt defeats the dsi/3ds cartridge security.
+* The only formats supported for CTR are .3ds, and .cci, untrimmed. The reason for this is because those types of executables are what is used on cartridges for the 3ds. .cci and .3ds are interchangeable without need to convert the media.
+* The only format supported for TWL is .nds, and .srl, untrimmed. Same reason as above, but for TWL.
+* If unsigned software is written (homebrew, rom hacks...), a modded system will be needed to boot the software. If retail-signed software is written, any system can be used.
+* Untrimmed versions of the executable are needed for aligning.
+
+## TODO
+
+* Support NTR dev cartridges, as well as CTR type2 developer cartridges
+* Fully implement reading, writing, erasing
+* PC port with an open source custom adapter ?
+If you would like to help and you have access to a IS-NITRO or IS-CTR/PARTNER-CTR, please contact me. Even better if you have the tools to perform soldering, analyzing logic, and such.
+--------------------------------------------------
 ## Decrypt9 WIP (work-in-progress) by d0k3 
 
 This is a work in progress fork of Archshifts original Decrypt9, including bleeding edge new features. Note that the names of the executable files for this are Decrypt9WIP.* instead of Decrypt9.*. New features introduced in this will eventually get pulled into [Archshifts repo](https://github.com/archshift/Decrypt9).
@@ -235,3 +260,11 @@ You may use this under the terms of the GNU General Public License GPL v2 or und
 * SciresM and Reisyukaku for helping me allow devkit compatibility
 * liomajor, Datalogger, zoogie, atkfromabove, mixups, key1340, k8099, Supster131, stbinan, Wolfvak, imanoob, Stary2001, kasai07 and countless others from freenode #Cakey and the GBAtemp forums for testing, feedback and helpful hints
 * Everyone I forgot about - if you think you deserve to be mentioned, just contact me
+
+## Credits by XLuma
+* Everyone mentionned by Archshift, and d0k3
+* ufo and scalr for testing an insane amount of early builds and ideas to make this work
+* voodoowen for being an infinite mine of information about lost/developer hardware and providing pictures of PCB's to nail down components
+* Gericom for his help logging commands from an IS-NITRO, and figuring a lot of stuff on the hardware level
+* Myria for providing useful information about developer cartridges
+* the people in Rare Gaming Dump #content_allds for letting me know such a utility would be nice to have
