@@ -13,6 +13,7 @@
 u32 BSWAP32(u32 val);
 
 void Cart_Init(void);
+void Cart_Init_Dev(void);
 int Cart_IsInserted(void);
 u32 Cart_GetID(void);
 void Cart_Secure_Init(u32* buf, u32* out);

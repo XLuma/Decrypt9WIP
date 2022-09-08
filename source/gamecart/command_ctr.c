@@ -55,3 +55,17 @@ void CTR_CmdSeed(u32 rand1, u32 rand2)
     const u32 seed_cmd[4] = { 0x83000000, 0x00000000, rand1, rand2 };
     CTR_SendCommand(seed_cmd, 0, 1, 0x700822C, NULL);
 }
+
+void CTR_CmdC8(void)
+{
+    u32 buff[512];
+    u32 cmd[4] = {0xC8000000, 0x00000000, 0x00000000, 0x00000000};
+    CTR_SendCommand(cmd, 4, 0, 0x100, &buff); //this command should work if debug mode command works
+}
+
+void CTR_Cmd9E(void)
+{
+    u8 buff[512];
+    u32 cmd[4] = {0x9E000000, 0x00000000, 0x00000000, 0x00000000};
+    CTR_SendCommand(cmd, 0, 0, 0, &buff);
+}

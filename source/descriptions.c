@@ -99,7 +99,9 @@ const char *DumpGameCartFullDesc    = "Dump the inserted gamecart to the Game di
                                       
            *FlashCartSaveDesc       = "Flash a savegame to the inserted gamecart.\n\n"
            
-                                      "Currently only works for NDS type gamecarts.";
+                                      "Currently only works for NDS type gamecarts.",
+
+            *DevCartridgeInterface  = "Communicate with developer cartridges.";
 
 
 // NDS Flashcart Options

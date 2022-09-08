@@ -216,3 +216,4 @@ u32 DecryptSdToCxi(u32 param);
 u32 DumpGameCart(u32 param);
 u32 DumpPrivateHeader(u32 param);
 u32 ProcessCartSave(u32 param);
+u32 DevInterface(u32 param);

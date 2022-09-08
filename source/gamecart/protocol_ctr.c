@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "protocol_ctr.h"
-
+#define VERBOSE_COMMANDS
 #include "protocol.h"
 #include "delay.h"
 #ifdef VERBOSE_COMMANDS

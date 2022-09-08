@@ -15,6 +15,9 @@
 #include "decryptor/nandfat.h"
 #include "decryptor/nand.h"
 #include "decryptor/game.h"
+#include "gamecart/protocol_ntr.h"
+#include "gamecart/card_ntr.h"
+#include "gamecart/protocol_ctr.h"
 
 #define CART_CHUNK_SIZE (u32) (1*1024*1024)
 
@@ -2382,4 +2385,98 @@ u32 ProcessCartSave(u32 param)
     
     
     return 0;
+}
+
+u32 DevInterface(u32 param)
+{
+    u32 cartId;
+    if (REG_CARDCONF2 & 0x1) {
+        Debug("Cartridge was not detected");
+        return 1;
+    }
+    else
+    {
+        Debug("Cartridge detected !");
+    }
+    Cart_Init_Dev();
+    u32 buff[512];
+    u32 cmd[2] = {0x00000000, 0x00000000};
+    NTR_SendCommand(cmd, 512, 0, &buff);
+    u32 cmd2[2] = {0x90000000, 0x00000000};
+    NTR_SendCommand(cmd2, 4, 0, &buff);
+    
+    cartId = Cart_GetID();
+
+    Debug("Press A for ntr\nPress b for ctr\n");
+    while(true)
+    {
+        u32 keys = InputWait();
+        if (keys & BUTTON_A)
+        {
+            Debug("Received value: %08X", NTR_CmdGetCartId());
+            NTR_Cmd9E();
+            NTR_Cmd9A();
+            NTR_Cmd99();
+            NTR_Cmd98();
+            InputWait();
+            break;
+        }
+        if (keys & BUTTON_B)
+        {
+            Debug("Received value: %08X", NTR_CmdGetCartId());
+            cmd[0] = 0x9E7DF92A; //write mode
+            cmd[1] = 0x11ADA9FA;
+            NTR_SendCommand(cmd, 0, 0, &buff);
+            Debug("Cartridge has been set in write mode!");
+            InputWait();
+            cmd[0] = 0x94000000; //nand id, same command as the ds/i nand roms
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 512, 0x400000, &buff);
+            Debug("Received data from 94h: %08X", buff);
+            InputWait();
+            cmd[0] = 0x6D000000; //cartridge info
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 0, 55730, &buff);
+            cmd[0] = 0x9F000000; //stuff is fetched in subsequent reads of 512 bytes
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 512, 0x100, &buff);
+           // NTR_SendCommand(cmd, 512, 0x100, &buff);
+            Debug("Received data from 00h: %08X", buff);
+            InputWait();
+            NTR_SendCommand(cmd, 512, 0x100, &buff);
+            break;
+        }
+        if (keys & BUTTON_X)
+        {
+            uint8_t buff[0x200];
+            FileCreate("ctr_romread.bin", true);
+            cmd[0] = 0x93000000;
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 0, 55730, NULL);
+            cmd[0] = 0x9F000000;
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 512, 0x100, buff);
+            FileWrite(&buff, 0x200, 0x0);
+            FileClose();
+            break;
+        }
+        if (keys & BUTTON_Y)
+        {
+            uint8_t buff[0x200];
+            FileCreate("ctr_copts.bin", true);
+            NTR_CmdReadCopts(buff);
+            Debug("Hello");
+            FileWrite(&buff, 0x200, 0x0);
+            FileClose();
+            Debug("N< %08X %08X %08X %08X", buff[192], buff[193], buff[194], buff[195]);
+            //for (int i = 0; i < 0x200; i+=4)
+            //{
+            //    Debug("N< %08X %08X %08X %08X", buff[i+0], buff[i+1], buff[i+2], buff[i+3]);
+            //    break;
+            //}
+            break;
+        }
+    }
+    return 0;
+    
 }

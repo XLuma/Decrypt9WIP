@@ -87,6 +87,7 @@ u32 InitializeD9(MenuInfo *menu)
         Debug("Initializing SD card... failed");
             errorlevel = 2;
     }
+    errorlevel = 0; //remove this before pushing thats dangerous
     Debug("");
     Debug("Initialization: %s", (errorlevel == 0) ? "success!" : (errorlevel == 1) ? "partially failed" : "failed!");
     
@@ -170,7 +171,7 @@ int main(int argc, char** argv)
             }
         },
         {
-            "Gamecart Dumper Options", 7,
+            "Gamecart Dumper Options", 8,
             {
                 { "Dump Cart (full)",             DumpGameCartFullDesc,    &DumpGameCart,          0 },
                 { "Dump Cart (trim)",             DumpGameCartTrimDesc,    &DumpGameCart,          CD_TRIM },
@@ -179,7 +180,8 @@ int main(int argc, char** argv)
                 { "Dump Cart to CIA",             DumpGameCartCIADesc,     &DumpGameCart,          CD_DECRYPT | CD_MAKECIA },
                 { "Dump Private Header",          DumpPrivateHeaderDesc,   &DumpPrivateHeader,     0 },
                 // { "Dump Savegame from Cart",      DumpCartSaveDesc,        &ProcessCartSave,       0 },
-                { "Flash Savegame to Cart",       DumpCartSaveDesc,        &ProcessCartSave,       CD_FLASH }
+                { "Flash Savegame to Cart",       DumpCartSaveDesc,        &ProcessCartSave,       CD_FLASH },
+                { "Dev Cartridge Operations",     DevCartridgeInterface,   &DevInterface,           0}
             }
         },
         {

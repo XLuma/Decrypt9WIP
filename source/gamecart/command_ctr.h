@@ -12,3 +12,5 @@ void CTR_CmdReadHeader(void* buffer);
 void CTR_CmdReadUniqueID(void* buffer);
 u32 CTR_CmdGetSecureId(u32 rand1, u32 rand2);
 void CTR_CmdSeed(u32 rand1, u32 rand2);
+void CTR_CmdC8(void); //should return id1
+void CTR_Cmd9E(void); //should set card in debug mode in 16 bti mode
