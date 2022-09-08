@@ -24,6 +24,7 @@ This fork, based on d0k3's own fork of Decrypt9, adds a very niche set of featur
 * Support NTR dev cartridges, as well as CTR type2 developer cartridges
 * Fully implement reading, writing, erasing
 * PC port with an open source custom adapter ?
+
 If you would like to help and you have access to a IS-NITRO or IS-CTR/PARTNER-CTR, please contact me. Even better if you have the tools to perform soldering, analyzing logic, and such.
 --------------------------------------------------
 ## Decrypt9 WIP (work-in-progress) by d0k3 
