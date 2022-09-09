@@ -18,6 +18,7 @@
 #include "gamecart/protocol_ntr.h"
 #include "gamecart/card_ntr.h"
 #include "gamecart/protocol_ctr.h"
+#include "gamecart/devcart.h"
 
 #define CART_CHUNK_SIZE (u32) (1*1024*1024)
 
@@ -2480,13 +2481,15 @@ u32 DevInterface(u32 param)
         {
             uint8_t buff[0x200];
             Debug("Getting NAND info...");
-            cmd[0] = 0x94000000; //nand id, same command as the ds/i nand roms
-            cmd[1] = 0x00000000;
-            NTR_SendCommand(cmd, 512, 0x400000, &buff);
+            NTR_Cmd94(buff);
+            t_nand nand;
+            nand.maker_code = buff[0];
+            get_pagesize(buff[3], &nand);
+            get_blocksize(buff[3], &nand);
+
             //5 first bytes are the good shit
             break;
         }
     }
     return 0;
-    
 }
