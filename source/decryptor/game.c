@@ -2484,7 +2484,6 @@ u32 DevInterface(u32 param)
             cmd[1] = 0x00000000;
             NTR_SendCommand(cmd, 512, 0x400000, &buff);
             //5 first bytes are the good shit
-            
             break;
         }
     }
