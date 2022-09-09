@@ -2407,7 +2407,7 @@ u32 DevInterface(u32 param)
     
     cartId = Cart_GetID();
 
-    Debug("Press A for ntr\nPress b for ctr\n");
+    Debug("Press A for ntr\nPress b for ctr\nX for rom read\nY for copts read");
     while(true)
     {
         u32 keys = InputWait();
@@ -2474,6 +2474,17 @@ u32 DevInterface(u32 param)
             //    Debug("N< %08X %08X %08X %08X", buff[i+0], buff[i+1], buff[i+2], buff[i+3]);
             //    break;
             //}
+            break;
+        }
+        if (keys & BUTTON_L1)
+        {
+            uint8_t buff[0x200];
+            Debug("Getting NAND info...");
+            cmd[0] = 0x94000000; //nand id, same command as the ds/i nand roms
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 512, 0x400000, &buff);
+            //5 first bytes are the good shit
+            
             break;
         }
     }
