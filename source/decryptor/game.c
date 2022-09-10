@@ -2486,8 +2486,11 @@ u32 DevInterface(u32 param)
             nand.maker_code = buff[0];
             get_pagesize(buff[3], &nand);
             get_blocksize(buff[3], &nand);
-
-            //5 first bytes are the good shit
+            break;
+        }
+        if (keys & BUTTON_R1)
+        {
+            //block erasing whenever I can figure out this bullshit
             break;
         }
     }

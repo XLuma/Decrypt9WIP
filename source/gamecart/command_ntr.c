@@ -170,21 +170,21 @@ void NTR_Cmd9E(void)//activates ntr write mode
 void NTR_Cmd9A(void) //unknown in geri's shot it has a 40h before
 {
     u8 buff [4];
-    u32 cmd[2] = {0x9A400000, 0x00000000};
+    u32 cmd[2] = {0x409A0000, 0x00000000};
     NTR_SendCommand(cmd, 4, 0, &buff); //apparently a 4 byte read
 }
 
 void NTR_Cmd98(void) //unknown
 {
     u8 buff [4];
-    u32 cmd[2] = {0x98000000, 0x00000000};
+    u32 cmd[2] = {0xC2980000, 0x00000000};
     NTR_SendCommand(cmd, 4, 0, &buff); //apparently a 4 byte read
 }
 
 void NTR_Cmd99(void) //unknown in geri's shot it has a 40h before
 {
     u8 buff [4];
-    u32 cmd[2] = {0x99000000, 0x00000000};
+    u32 cmd[2] = {0x4F990000, 0x00000000};
     NTR_SendCommand(cmd, 4, 0, &buff); //apparently a 4 byte read
 }
 
