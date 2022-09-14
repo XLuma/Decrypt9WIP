@@ -18,7 +18,6 @@ void NTR_CmdReadData (u32 offset, void* buffer);
 
 bool NTR_Secure_Init (u8* buffer, u32 CartID, int iCardDevice);
 
-//Dev cartridge commands
 void NTR_CmdAF(void); //activate debug mode, dont know which cartridges are affected
 void NTR_Cmd6D(void *buff); //cartridge info, copts and bad block list
 void NTR_Cmd94(void *buff); //nand id
@@ -30,3 +29,5 @@ void NTR_Cmd9E(void); //ntr write mode
 void NTR_Cmd9A(void); //unknown, apparently a 4 byte read. rom id ?
 void NTR_Cmd98(void); //unknown
 void NTR_Cmd99(void); //unknown
+void NTR_Cmd9D(u32 blkNum); //erase nand block
+u8* NTR_Cmd6F(void); //poll for write/erase status

@@ -198,3 +198,18 @@ void NTR_Cmd93(u8 *address, void *buff)
 {
     return;
 }
+
+void NTR_Cmd9D(u32 blkNum) //erase nand block
+{
+    u32 cmd[2] = {0x9D000000, 0x00000000};
+    cmd[0] = cmd[0] + blkNum;
+    NTR_SendCommand(cmd, 0, 0, NULL);
+}
+
+u8* NTR_Cmd6F(void)//poll for write/erase status
+{
+    u32 cmd[2] = {0x6F000000, 0x00000000};
+    u8 buff[4];
+    NTR_SendCommand(cmd, 4, 0x100, buff);
+    return (buff);
+}

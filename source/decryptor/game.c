@@ -2491,6 +2491,20 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_R1)
         {
             //block erasing whenever I can figure out this bullshit
+            u32 blk_num, current_blk, page_in_blk;
+            blk_num = 0;
+            current_blk = 0;
+            while (blk_num < 8192)
+            {
+                current_blk = blk_num << 6;
+                NTR_Cmd9D(current_blk);
+                while ((NTR_Cmd6F()[0] >> 6) == 0) //busy
+                {
+                    //poll again, change 6f to take a pointer as parameter or we will run out of mem
+                    break;
+                }
+                blk_num++;
+            }
             break;
         }
     }
