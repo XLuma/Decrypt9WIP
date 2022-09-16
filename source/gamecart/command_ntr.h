@@ -30,4 +30,4 @@ void NTR_Cmd9A(void); //unknown, apparently a 4 byte read. rom id ?
 void NTR_Cmd98(void); //unknown
 void NTR_Cmd99(void); //unknown
 void NTR_Cmd9D(u32 blkNum); //erase nand block
-u8* NTR_Cmd6F(void); //poll for write/erase status
+void NTR_Cmd6F(u8 *buff); //poll for write/erase status

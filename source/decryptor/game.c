@@ -2496,14 +2496,46 @@ u32 DevInterface(u32 param)
             current_blk = 0;
             while (blk_num < 8192)
             {
+                uint8_t buff[4];
                 current_blk = blk_num << 6;
                 NTR_Cmd9D(current_blk);
-                while ((NTR_Cmd6F()[0] >> 6) == 0) //busy
+                NTR_Cmd6F(&buff);
+                while ((buff[0] >> 6) == 0) //busy
                 {
                     //poll again, change 6f to take a pointer as parameter or we will run out of mem
-                    break;
+                    NTR_Cmd6F(&buff);
+                    if ((buff[0] >> 6) == 1) //ready
+                    {
+                        if ((buff[0] >> 0) == 0) //pass
+                        {
+                            printf("Block %u has been erased!\n", blk_num);
+                            break;
+                        }
+                        else if ((buff[0] >> 0) == 1) //fail
+                        {
+                            printf("Bad block at block %u !\n", blk_num);
+                            blk_num--; //decrement so that we break out of it, and increment back to the same block number
+                            break;
+                        }
+                    }
                 }
+                Debug("Block %d", blk_num);
                 blk_num++;
+            }
+            Debug("Cartridge has been erased !");
+            break;
+        }
+        if (keys & BUTTON_UP)
+        {
+            Debug("Writing cubic ninja to cartridge...");
+            u8 buffer[0x200];
+            u8 addr;
+            u8 page;
+            FileOpen("D9Game/cubic_ninja.cci");
+            u8 i = 0;
+            while (i < 8)
+            {
+
             }
             break;
         }
