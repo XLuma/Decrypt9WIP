@@ -2539,7 +2539,7 @@ u32 DevInterface(u32 param)
             curr_offset = 0;
             u32 cmd_dummy[2] = {0x00000000, 0x00000000};
             //max capacity is 2147483648 bytes, 524 288 pages total, 8192 blocks, for 4096 byte pages, written with 512 byte buffers. 64 page per block
-            while (blk_num < 8192) //for all blocks
+            while (blk_num < 512) //for all blocks. was 8192 but ill replace with something more clever eventually
             {
                 addr = (blk_num * 64);
                 while (page < 64) //for all pages in said block
