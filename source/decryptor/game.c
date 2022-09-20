@@ -2531,11 +2531,22 @@ u32 DevInterface(u32 param)
             u8 buffer[0x200];
             u8 addr;
             u8 page;
+            u8 blk_num;
+            u32 curr_offset;
             FileOpen("D9Game/cubic_ninja.cci");
             u8 i = 0;
-            while (i < 8)
+            curr_offset = 0;
+            u32 cmd_dummy[2] = {0x00000000, 0x00000000};
+            //max capacity is 2147483648 bytes, 524 288 pages total, 8192 blocks, for 4096 byte pages, written with 512 byte buffers. 64 page per block
+            while (i < 524288)
             {
-
+                NTR_Cmd92(); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
+                while (i < 8)
+                {
+                    FileRead(&buffer, 0x200, curr_offset);
+                    NTR_SendCommandWrite(cmd_dummy, 512, 0, buffer);
+                    //add increments
+                }
             }
             break;
         }

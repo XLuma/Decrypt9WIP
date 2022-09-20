@@ -211,3 +211,9 @@ void NTR_Cmd6F(u8 *buff)//poll for write/erase status
     u32 cmd[2] = {0x6F000000, 0x00000000};
     NTR_SendCommand(cmd, 4, 0x100, buff);
 }
+
+void NTR_Cmd92(void)
+{
+    u32 cmd[2] = {0x92000000, 0x00000000};
+    NTR_SendCommand(cmd, 0, 0, NULL);
+}
