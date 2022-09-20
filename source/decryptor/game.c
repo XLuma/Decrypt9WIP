@@ -2529,24 +2529,57 @@ u32 DevInterface(u32 param)
         {
             Debug("Writing cubic ninja to cartridge...");
             u8 buffer[0x200];
-            u8 addr;
-            u8 page;
-            u8 blk_num;
+            u8 status[0x200];
+            u32 addr = 0;
+            u8 page = 0;
+            u8 blk_num = 0;
             u32 curr_offset;
             FileOpen("D9Game/cubic_ninja.cci");
-            u8 i = 0;
+            u32 i = 0;
             curr_offset = 0;
             u32 cmd_dummy[2] = {0x00000000, 0x00000000};
-            //max capacity is 2147483648 bytes, 524 288 pages total, 8192 blocks, for 4096 byte pages, written with 512 byte buffers. 64 page per block
-            while (i < 524288)
+            //max capacity is 2147483648 bytes, 524 288 pages total, 8192 blocks, for 4096 byte pages, written with 512 byte buffers. 64 page per block
+            while (blk_num < 8192) //for all blocks
             {
-                NTR_Cmd92(); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
-                while (i < 8)
+                addr = (blk_num * 64);
+                while (page < 64) //for all pages in said block
                 {
-                    FileRead(&buffer, 0x200, curr_offset);
-                    NTR_SendCommandWrite(cmd_dummy, 512, 0, buffer);
-                    //add increments
+                    addr += page;
+                    addr &= ~(1UL << 0); //set bit0 here to 0 because thats what the
+                    NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
+                    while (i < 8) //for all buffers inside the current page
+                    {
+                        FileRead(&buffer, 0x200, curr_offset);
+                        curr_offset += 0x200; //increment offset by 512 byte
+                        NTR_SendCommandWrite(cmd_dummy, 512, 0, buffer);
+                        i++;
+                    }
+                    NTR_Cmd6F(&buff); // check for nand status
+                    while ((buff[0] >> 6) == 0) //busy
+                    {
+                        //poll again, change 6f to take a pointer as parameter or we will run out of mem
+                        NTR_Cmd6F(&buff);
+                        if ((buff[0] >> 6) == 1) //ready
+                        {
+                            if ((buff[0] >> 0) == 0) //pass
+                            {
+                                printf("page %u has been written!\n", blk_num);
+                                page++;
+                                i = 0;
+                                break;
+                            }
+                            else if ((buff[0] >> 0) == 1) //fail
+                            {
+                                printf("Bad block at block %u !\n", blk_num);
+                                blk_num--; //decrement so that we break out of it, and increment back to the same block number
+                                page = 0;
+                                break;
+                            }
+                        }
+                    }
                 }
+                page = 0;
+                blk_num++;
             }
             break;
         }

@@ -31,4 +31,4 @@ void NTR_Cmd98(void); //unknown
 void NTR_Cmd99(void); //unknown
 void NTR_Cmd9D(u32 blkNum); //erase nand block
 void NTR_Cmd6F(u8 *buff); //poll for write/erase status
-void NTR_Cmd92(void); //Command to notify the controller we want to write data. Followed by nth number of dummy commands to clock data
+void NTR_Cmd92(u32 page); //Command to notify the controller we want to write data. Followed by nth number of dummy commands to clock data

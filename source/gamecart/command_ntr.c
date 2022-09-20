@@ -212,8 +212,9 @@ void NTR_Cmd6F(u8 *buff)//poll for write/erase status
     NTR_SendCommand(cmd, 4, 0x100, buff);
 }
 
-void NTR_Cmd92(void)
+void NTR_Cmd92(u32 page)
 {
     u32 cmd[2] = {0x92000000, 0x00000000};
+    cmd[0] = cmd[0] + page;
     NTR_SendCommand(cmd, 0, 0, NULL);
 }
