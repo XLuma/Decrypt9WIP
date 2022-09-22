@@ -122,7 +122,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
     // wait rom cs high
     do { cardCtrl = REG_NTRCARDROMCNT; } while( cardCtrl & NTRCARD_BUSY );
     //lastCmd[0] = command[0];lastCmd[1] = command[1];
-
+/*
 #ifdef VERBOSE_COMMANDS
     if (!useBuf) {
         Debug("N< NULL");
@@ -151,6 +151,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
         }
     }
 #endif
+*/
 }
 
 void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void* buffer)
@@ -230,12 +231,14 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
     {
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
+            //Debug("Waiting");
             cardCtrl = REG_NTRCARDROMCNT;
             if (cardCtrl & NTRCARD_DATA_READY)
             {
                 REG_NTRCARDFIFO = *pbuf32;
                 pbuf32++;
                 count += 4;
+                //Debug("Data sent: %d", count);
             }
         }
     }
@@ -270,11 +273,11 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
     }
 
     // if read is not finished, ds will not pull ROM CS to high, we pull it high manually
-    if( count != transferLength ) {
+    if( count == transferLength ) {
         // MUST wait for next data ready,
         // if ds pull ROM CS to high during 4 byte data transfer, something will mess up
         // so we have to wait next data ready
-        do { cardCtrl = REG_NTRCARDROMCNT; } while(!(cardCtrl & NTRCARD_DATA_READY));
+        do { cardCtrl = REG_NTRCARDROMCNT; Debug("Wait1"); } while(!(cardCtrl & NTRCARD_DATA_READY));
         // and this tiny delay is necessary
         //ioAK2Delay(33);
         // pull ROM CS high
@@ -282,9 +285,10 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
         REG_NTRCARDROMCNT = NTRKEY_PARAM | NTRCARD_ACTIVATE | NTRCARD_nRESET/* | 0 | 0x0000*/;
     }
     // wait rom cs high
-    do { cardCtrl = REG_NTRCARDROMCNT; } while( cardCtrl & NTRCARD_BUSY );
+    do { cardCtrl = REG_NTRCARDROMCNT; Debug("Wait2"); } while( cardCtrl & NTRCARD_BUSY );
     //lastCmd[0] = command[0];lastCmd[1] = command[1];
 
+/*
 #ifdef VERBOSE_COMMANDS
     if (!useBuf) {
         Debug("N< NULL");
@@ -313,4 +317,5 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
         }
     }
 #endif
+*/
 }

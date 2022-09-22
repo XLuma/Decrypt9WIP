@@ -2547,6 +2547,7 @@ u32 DevInterface(u32 param)
                     addr += page;
                     addr &= ~(1UL << 0); //set bit0 here to 0 because thats what the
                     NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
+                    InputWait();
                     while (i < 8) //for all buffers inside the current page
                     {
                         FileRead(&buffer, 0x200, curr_offset);
@@ -2554,6 +2555,7 @@ u32 DevInterface(u32 param)
                         NTR_SendCommandWrite(cmd_dummy, 512, 0, buffer);
                         i++;
                     }
+                    InputWait();
                     NTR_Cmd6F(&buff); // check for nand status
                     while ((buff[0] >> 6) == 0) //busy
                     {
@@ -2563,20 +2565,24 @@ u32 DevInterface(u32 param)
                         {
                             if ((buff[0] >> 0) == 0) //pass
                             {
-                                printf("page %u has been written!\n", blk_num);
+                                Debug("page %u has been written!\n", blk_num);
                                 page++;
                                 i = 0;
                                 break;
                             }
                             else if ((buff[0] >> 0) == 1) //fail
                             {
-                                printf("Bad block at block %u !\n", blk_num);
-                                blk_num--; //decrement so that we break out of it, and increment back to the same block number
-                                page = 0;
+                                Debug("Bad block at block %u !\n", blk_num);
+                                //blk_num--; //decrement so that we break out of it, and increment back to the same block number
+                                page = 0; //so we dont repeat the loop
                                 break;
                             }
                         }
                     }
+                    if (page == 0)
+                        Debug("Page hasnt increased. something bad happened");
+                    Debug("ok");
+                    InputWait();
                 }
                 page = 0;
                 blk_num++;
