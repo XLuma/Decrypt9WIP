@@ -122,7 +122,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
     // wait rom cs high
     do { cardCtrl = REG_NTRCARDROMCNT; } while( cardCtrl & NTRCARD_BUSY );
     //lastCmd[0] = command[0];lastCmd[1] = command[1];
-/*
+
 #ifdef VERBOSE_COMMANDS
     if (!useBuf) {
         Debug("N< NULL");
@@ -151,7 +151,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
         }
     }
 #endif
-*/
+
 }
 
 void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void* buffer)

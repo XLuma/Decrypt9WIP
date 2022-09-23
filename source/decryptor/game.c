@@ -2528,8 +2528,9 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_UP)
         {
             Debug("Writing cubic ninja to cartridge...");
-            u8 buffer[0x200];
-            u8 status[0x200];
+            //u8 buffer[0x200];
+            u8 *buffer = NULL;
+            u8 *status = malloc(sizeof(u8) * 4);
             u32 addr = 0;
             u8 page = 0;
             u8 blk_num = 0;
@@ -2547,16 +2548,37 @@ u32 DevInterface(u32 param)
                     addr += page;
                     addr &= ~(1UL << 0); //set bit0 here to 0 because thats what the
                     NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
-                    InputWait();
                     while (i < 8) //for all buffers inside the current page
                     {
-                        FileRead(&buffer, 0x200, curr_offset);
-                        curr_offset += 0x200; //increment offset by 512 byte
-                        NTR_SendCommandWrite(cmd_dummy, 512, 0, buffer);
+                        buffer = malloc(sizeof(u8) * 0x200);
+                        //FileRead(&buffer, 0x200, curr_offset);
+                        //curr_offset += 0x200; //increment offset by 512 byte
+                        curr_offset += FileRead(&buffer, 0x200, curr_offset);
+                        NTR_SendCommandWrite(cmd_dummy, 512, 100, buffer);
+                        free(buffer);
                         i++;
                     }
                     InputWait();
-                    NTR_Cmd6F(&buff); // check for nand status
+                    NTR_Cmd6F(status); // check for nand status
+                    if (status == NULL)
+                        return 1;
+                    Debug("%08X", status[0]);
+                    while (status[0] == 0xFF)
+                        NTR_Cmd6F(&status);
+                    if ((status[0] >> 0) == 0) //pass
+                    {
+                        Debug("page %u has been written!\n", page);
+                        page++;
+                        i = 0;
+                        InputWait();
+                    }
+                    else{
+                        Debug("wtf is this %d", status[0]);
+                        Debug("bit 0 is %d", (status[0] & (1 << (1 - 1))));
+                        InputWait();
+                        i = 0;
+                    }
+                    /*
                     while ((buff[0] >> 6) == 0) //busy
                     {
                         //poll again, change 6f to take a pointer as parameter or we will run out of mem
@@ -2579,14 +2601,16 @@ u32 DevInterface(u32 param)
                             }
                         }
                     }
+                    */
                     if (page == 0)
                         Debug("Page hasnt increased. something bad happened");
+                    i = 0;
                     Debug("ok");
-                    InputWait();
                 }
                 page = 0;
                 blk_num++;
             }
+            free(status);
             break;
         }
     }
