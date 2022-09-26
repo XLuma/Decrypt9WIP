@@ -2528,18 +2528,21 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_UP)
         {
             Debug("Writing cubic ninja to cartridge...");
-            //u8 buffer[0x200];
             u8 *buffer = NULL;
             u8 *status = malloc(sizeof(u8) * 4);
             u32 addr = 0;
             u8 page = 0;
             u8 blk_num = 0;
             u32 curr_offset;
-            FileOpen("D9Game/cubic_ninja.cci");
             u32 i = 0;
             curr_offset = 0;
             u32 cmd_dummy[2] = {0x00000000, 0x00000000};
             //max capacity is 2147483648 bytes, 524 288 pages total, 8192 blocks, for 4096 byte pages, written with 512 byte buffers. 64 page per block
+            if (DebugFileOpen("cubic_ninja.cci") != true)
+            {
+                free(status);
+                return 1;
+            }
             while (blk_num < 512) //for all blocks. was 8192 but ill replace with something more clever eventually
             {
                 addr = (blk_num * 64);
@@ -2548,25 +2551,43 @@ u32 DevInterface(u32 param)
                     addr += page;
                     addr &= ~(1UL << 0); //set bit0 here to 0 because thats what the
                     NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
+                    buffer = malloc(sizeof(u8) * 0x200);
                     while (i < 8) //for all buffers inside the current page
                     {
-                        buffer = malloc(sizeof(u8) * 0x200);
-                        //FileRead(&buffer, 0x200, curr_offset);
-                        //curr_offset += 0x200; //increment offset by 512 byte
-                        curr_offset += FileRead(&buffer, 0x200, curr_offset);
-                        NTR_SendCommandWrite(cmd_dummy, 512, 100, buffer);
-                        free(buffer);
+                        if (buffer == NULL)
+                        {
+                            Debug("Couldnt allocate mem!");
+                            free(buffer);
+                            free(status);
+                            FileClose();
+                            return 1;
+                        }
+                        if (FileRead(buffer, 0x200, curr_offset) != 0x200)
+                        {
+                            FileClose();
+                            free(buffer);
+                            free(status);
+                            return 1;
+                        }
+                        curr_offset += 0x200;
+                        NTR_SendCommandWrite(cmd_dummy, 512, 0x100, buffer);
+                        InputWait();
                         i++;
                     }
+                    free(buffer);
                     InputWait();
                     NTR_Cmd6F(status); // check for nand status
                     if (status == NULL)
                         return 1;
                     Debug("%08X", status[0]);
-                    while (status[0] == 0xFF)
-                        NTR_Cmd6F(&status);
-                    if ((status[0] >> 0) == 0) //pass
+                    while ((status[0] & (0 << (6 - 1))) == 0) //busy
                     {
+                        NTR_Cmd6F(status);
+                        InputWait();
+                    }
+                    if ((status[0] & (0 << (1 - 1))) == 0) //pass
+                    {
+                        Debug("%08X", status[0]);
                         Debug("page %u has been written!\n", page);
                         page++;
                         i = 0;
