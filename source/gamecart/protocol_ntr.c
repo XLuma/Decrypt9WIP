@@ -68,7 +68,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
 
     if(useBuf32)
     {
-        Debug("original usebuf32");
+        //Debug("original usebuf32");
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
             cardCtrl = REG_NTRCARDROMCNT;
@@ -81,7 +81,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
     }
     else if(useBuf)
     {
-        Debug("original usebuf");
+        //Debug("original usebuf");
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
             cardCtrl = REG_NTRCARDROMCNT;
@@ -98,7 +98,7 @@ void NTR_SendCommand(const u32 command[2], u32 pageSize, u32 latency, void* buff
     }
     else
     {
-        Debug("original nobuf");
+        //Debug("original nobuf");
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
             cardCtrl = REG_NTRCARDROMCNT;
@@ -207,9 +207,10 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
     // go
     REG_NTRCARDROMCNT = 0x10000000;
     REG_NTRCARDROMCNT = NTRKEY_PARAM | NTRCARD_ACTIVATE | NTRCARD_nRESET | pageParam | latency;
-
+    REG_NTRCARDROMCNT = REG_NTRCARDROMCNT | NTRCARD_WR;
     u8 * pbuf = (u8 *)buffer;
     u32 * pbuf32 = (u32 * )buffer;
+    REG_NTRCARDFIFO = *pbuf32; //REMOVE THIS
     bool useBuf = ( NULL != pbuf );
     bool useBuf32 = (useBuf && (0 == (3 & ((u32)buffer))));
 
@@ -239,9 +240,12 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
             cardCtrl = REG_NTRCARDROMCNT;
             if (cardCtrl & NTRCARD_DATA_READY)
             {
-                REG_NTRCARDFIFO = *pbuf32;
-                //Debug("%08X", *pbuf32);
                 pbuf32++;
+                Debug("%X", REG_NTRCARDFIFO);
+                REG_NTRCARDFIFO = *pbuf32;
+                //Debug("%X", REG_NTRCARDFIFO);
+                //Debug("%08X", *pbuf32);
+                //pbuf32++;
                 count += 4;
                 //Debug("Data sent: %d", count);
             }
@@ -249,7 +253,7 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
     }
     else if(useBuf)
     {
-        Debug("usebuf");
+        //Debug("usebuf");
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
             cardCtrl = REG_NTRCARDROMCNT;
@@ -267,7 +271,7 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
     }
     else
     {
-        Debug("nobuf");
+        //Debug("nobuf");
         while( (cardCtrl & NTRCARD_BUSY) && count < pageSize)
         {
             cardCtrl = REG_NTRCARDROMCNT;
@@ -284,7 +288,7 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
         // MUST wait for next data ready,
         // if ds pull ROM CS to high during 4 byte data transfer, something will mess up
         // so we have to wait next data ready
-        do { cardCtrl = REG_NTRCARDROMCNT; Debug("Wait1"); } while(!(cardCtrl & NTRCARD_DATA_READY));
+        do { cardCtrl = REG_NTRCARDROMCNT; /*Debug("Wait1");*/ } while(!(cardCtrl & NTRCARD_DATA_READY));
         // and this tiny delay is necessary
         //ioAK2Delay(33);
         // pull ROM CS high
@@ -292,7 +296,7 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
         REG_NTRCARDROMCNT = NTRKEY_PARAM | NTRCARD_ACTIVATE | NTRCARD_nRESET/* | 0 | 0x0000*/;
     }
     // wait rom cs high
-    do { cardCtrl = REG_NTRCARDROMCNT; Debug("Wait2"); } while( cardCtrl & NTRCARD_BUSY );
+    do { cardCtrl = REG_NTRCARDROMCNT; /*Debug("Wait2");*/ } while( cardCtrl & NTRCARD_BUSY );
     //lastCmd[0] = command[0];lastCmd[1] = command[1];
 
 /*

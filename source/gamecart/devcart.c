@@ -1,4 +1,5 @@
 #include "devcart.h"
+#include "draw.h"
 
 void get_pagesize(uint8_t num, t_nand *nand)
 {
@@ -26,17 +27,21 @@ void get_blocksize(uint8_t num, t_nand *nand)
     if ((byte | BLOCKSIZE_64K) == BLOCKSIZE_64K)
     {
         nand->blocksize = BLOCKSIZE_64K;
+        Debug("64kbit block");
     }
     if ((byte & BLOCKSIZE_128K) == BLOCKSIZE_128K)
     {
         nand->blocksize = BLOCKSIZE_128K;
+        Debug("128kbit block");
     }
     if ((byte & BLOCKSIZE_256K) == BLOCKSIZE_256K)
     {
         nand->blocksize = BLOCKSIZE_256K;
+        Debug("256kbit block");
     }
     if ((byte & BLOCKSIZE_512K) == BLOCKSIZE_512K)
     {
         nand->blocksize = BLOCKSIZE_512K;
+        Debug("512kbit block");
     }
 }

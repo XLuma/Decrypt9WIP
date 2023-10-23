@@ -1928,7 +1928,6 @@ u32 DumpCtrGameCart(u32 param)
         Debug("Error reading cart NCCH header");
         return 1;
     }
-
     // secure init
     u32 sec_keys[4];
     Cart_Secure_Init((u32*) ncch, sec_keys);
@@ -2391,6 +2390,7 @@ u32 ProcessCartSave(u32 param)
 u32 DevInterface(u32 param)
 {
     u32 cartId;
+    (void)param;
     if (REG_CARDCONF2 & 0x1) {
         Debug("Cartridge was not detected");
         return 1;
@@ -2408,7 +2408,8 @@ u32 DevInterface(u32 param)
     
     cartId = Cart_GetID();
 
-    Debug("Press A for ntr\nPress b for ctr\nX for rom read\nY for copts read");
+    //Debug("Press A for ntr\nPress b for ctr\nX for rom read\nY for copts read\npress R for TWL erasing test");
+    Debug("Press Shoulder R for TWL Erasing\nPress Shoulder L for nand");
     while(true)
     {
         u32 keys = InputWait();
@@ -2438,11 +2439,11 @@ u32 DevInterface(u32 param)
             cmd[0] = 0x6D000000; //cartridge info
             cmd[1] = 0x00000000;
             NTR_SendCommand(cmd, 0, 55730, &buff);
-            cmd[0] = 0x9F000000; //stuff is fetched in subsequent reads of 512 bytes
+            cmd[0] = 0x01000000; //stuff is fetched in subsequent reads of 512 bytes
             cmd[1] = 0x00000000;
-            NTR_SendCommand(cmd, 512, 0x100, &buff);
+            NTR_SendCommand(cmd, 512, 55730, &buff);
            // NTR_SendCommand(cmd, 512, 0x100, &buff);
-            Debug("Received data from 00h: %08X", buff);
+            Debug("Cart ID1: %08X", buff[0xC3]);
             InputWait();
             NTR_SendCommand(cmd, 512, 0x100, &buff);
             break;
@@ -2450,13 +2451,13 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_X)
         {
             uint8_t buff[0x200];
-            FileCreate("ctr_romread.bin", true);
-            cmd[0] = 0x93000000;
+            FileCreate("twl_cleancopts.bin", true);
+            cmd[0] = 0x6D000000;
             cmd[1] = 0x00000000;
-            NTR_SendCommand(cmd, 0, 55730, NULL);
+            NTR_SendCommand(cmd, 0, 55730, buff);
             cmd[0] = 0x9F000000;
             cmd[1] = 0x00000000;
-            NTR_SendCommand(cmd, 512, 0x100, buff);
+            NTR_SendCommand(cmd, 512, 55730, buff);
             FileWrite(&buff, 0x200, 0x0);
             FileClose();
             break;
@@ -2464,17 +2465,47 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_Y)
         {
             uint8_t buff[0x200];
-            FileCreate("ctr_copts.bin", true);
-            NTR_CmdReadCopts(buff);
-            Debug("Hello");
-            FileWrite(&buff, 0x200, 0x0);
-            FileClose();
-            Debug("N< %08X %08X %08X %08X", buff[192], buff[193], buff[194], buff[195]);
+            //FileCreate("ctr_copts.bin", true);
+            //NTR_CmdReadCopts(buff);
+            //Debug("Hello");
+            //FileWrite(&buff, 0x200, 0x0);
+            //FileClose();
+            //Debug("N< %08X %08X %08X %08X", buff[192], buff[193], buff[194], buff[195]);
             //for (int i = 0; i < 0x200; i+=4)
             //{
             //    Debug("N< %08X %08X %08X %08X", buff[i+0], buff[i+1], buff[i+2], buff[i+3]);
             //    break;
             //}
+            if (DebugFileOpen("ctr_copts.bin") != true)
+            {
+                return 1;
+            }
+            FileRead(buff, 0x200, 0x0);
+            Debug("FileBuffer: %08X", buff);
+            NTR_Cmd91(buff);
+            NTR_Cmd6F(&buff);
+            Debug("Status: %08X", (buff[0] >> 6));
+            //while ((buff[0] >> 6) & 1) //busy
+            while(buff[0] == 0x80)
+            {
+                //poll again, change 6f to take a pointer as parameter or we will run out of mem
+                NTR_Cmd6F(&buff);
+                if ((buff[0] >> 6) & 1 == 1) //ready
+                {
+                    if ((buff[0] >> 0) & 1 == 0) //pass
+                    {
+                        //Debug("Wrote header to cartridge !");
+                        break;
+                    }
+                    else if ((buff[0] >> 0) & 1 == 1) //fail
+                    {
+                        printf("WE FUCKED UP");
+                        break;
+                    }
+                }
+                Debug("Waiting");
+            }
+            Debug("Wrote COPTS!");
             break;
         }
         if (keys & BUTTON_L1)
@@ -2494,7 +2525,16 @@ u32 DevInterface(u32 param)
             u32 blk_num, current_blk, page_in_blk;
             blk_num = 0;
             current_blk = 0;
-            while (blk_num < 8192)
+            Debug("Cartridge id: %08X\n", NTR_CmdGetCartId());
+            cmd[0] = 0x9E7DF92A; //write mode
+            cmd[1] = 0x11ADA9FA;
+            NTR_SendCommand(cmd, 0, 0, &buff);
+            Debug("Cartridge has been set in write mode!");
+            cmd[0] = 0x94000000; //nand id, same command as the ds/i nand roms
+            cmd[1] = 0x00000000;
+            NTR_SendCommand(cmd, 512, 0x400000, &buff);
+            Debug("Received data from 94h(nand): %08X", buff);
+            while (blk_num < 4096)
             {
                 uint8_t buff[4];
                 current_blk = blk_num << 6;
@@ -2508,7 +2548,7 @@ u32 DevInterface(u32 param)
                     {
                         if ((buff[0] >> 0) == 0) //pass
                         {
-                            printf("Block %u has been erased!\n", blk_num);
+                            //printf("Block %u has been erased!\n", blk_num);
                             break;
                         }
                         else if ((buff[0] >> 0) == 1) //fail
@@ -2519,12 +2559,100 @@ u32 DevInterface(u32 param)
                         }
                     }
                 }
-                Debug("Block %d", blk_num);
+                if(blk_num % 100 == 0)
+                    Debug("Block %d", blk_num);
                 blk_num++;
             }
             Debug("Cartridge has been erased !");
             break;
         }
+        if (keys & BUTTON_DOWN) 
+        {
+            //8bkyte page, +0x4 increment for page
+            Debug("Test writing header to cart");
+            u8 *buffer = malloc(sizeof(u8) * 0x200);
+            u8 *status = malloc(sizeof(u8) * 4);
+            u8 *copts = malloc(sizeof(u8) * 0x200);
+            int i = 0;
+            size_t curr_page = 0;
+            u32 curr_offset = 0;
+            u32 cmd_dummy[2] = {0x02000000, 0x00000000};
+
+            if (DebugFileOpen("ctr_rom.cci") != true)
+            {
+                free(status);
+                free(buffer);
+                return 1;
+            }
+            size_t nb_pages = FileGetSize() / 0x2000;
+            //Debug("Filesize is %ld bytes for %ld nb of pages", FileGetSize(), nb_pages);
+            //NTR_ReadCopts(copts);
+            //Debug("%08X", buff[196]);
+            //copts[196] = 0x0;
+            while(curr_page < nb_pages) {
+                while(i < 16) {
+                    memset(buffer, '\0', 0x200);
+                    FileRead(buffer, 0x200, curr_offset);
+                    if (i == 0) {
+                        NTR_Cmd92(curr_page, buffer);
+                        i++;
+                        curr_offset += 0x200;
+                    }
+                    else {
+                        NTR_SendCommandWrite(cmd_dummy, 512, 0x100, buffer);
+                        i++;
+                        curr_offset += 0x200;
+                    }
+                }
+                NTR_Cmd6F(&buff);
+                while ((buff[0] >> 6) == 0) //busy
+                {
+                    //poll again, change 6f to take a pointer as parameter or we will run out of mem
+                    NTR_Cmd6F(&buff);
+                    if ((buff[0] >> 6) == 1) //ready
+                    {
+                        if ((buff[0] >> 0) == 0) //pass
+                        {
+                            //Debug("Wrote header to cartridge !");
+                            break;
+                        }
+                        else if ((buff[0] >> 0) == 1) //fail
+                        {
+                            printf("WE FUCKED UP");
+                            break;
+                        }
+                    }
+                }
+                curr_page += 0x4;
+                i = 0;
+            }
+            /*
+            NTR_Cmd91(copts);
+            NTR_Cmd6F(&buff);
+            while ((buff[0] >> 6) == 0) //busy
+            {
+                //poll again, change 6f to take a pointer as parameter or we will run out of mem
+                NTR_Cmd6F(&buff);
+                if ((buff[0] >> 6) == 1) //ready
+                {
+                    if ((buff[0] >> 0) == 0) //pass
+                    {
+                        //Debug("Wrote header to cartridge !");
+                        break;
+                    }
+                    else if ((buff[0] >> 0) == 1) //fail
+                    {
+                        printf("WE FUCKED UP");
+                        break;
+                    }
+                }
+            }
+            */
+            Debug("Wrote block to cartridge !");
+
+            break;
+        }
+
         if (keys & BUTTON_UP)
         {
             Debug("Writing cubic ninja to cartridge...");
@@ -2550,9 +2678,9 @@ u32 DevInterface(u32 param)
                 {
                     addr += page;
                     addr &= ~(1UL << 0); //set bit0 here to 0 because thats what the
-                    NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
+                    //NTR_Cmd92(addr); //figure out page address here using example code. remember bit 0 of the address needs to be 0 according to the doc
                     buffer = malloc(sizeof(u8) * 0x200);
-                    while (i < 8) //for all buffers inside the current page
+                    while (i < 16) //for all buffers inside the current page
                     {
                         if (buffer == NULL)
                         {
@@ -2569,13 +2697,22 @@ u32 DevInterface(u32 param)
                             free(status);
                             return 1;
                         }
-                        curr_offset += 0x200;
-                        NTR_SendCommandWrite(cmd_dummy, 512, 0x100, buffer);
-                        InputWait();
-                        i++;
+                        if (i == 0)
+                        {
+                            NTR_Cmd92(addr, buffer);
+                            curr_offset += 0x200;
+                            InputWait();
+                            i++;
+                        }
+                        else
+                        {
+                            curr_offset += 0x200;
+                            NTR_SendCommandWrite(cmd_dummy, 512, 0x100, buffer);
+                            InputWait();
+                            i++;    
+                        }
                     }
                     free(buffer);
-                    InputWait();
                     NTR_Cmd6F(status); // check for nand status
                     if (status == NULL)
                         return 1;
@@ -2583,7 +2720,6 @@ u32 DevInterface(u32 param)
                     while ((status[0] & (0 << (6 - 1))) == 0) //busy
                     {
                         NTR_Cmd6F(status);
-                        InputWait();
                     }
                     if ((status[0] & (0 << (1 - 1))) == 0) //pass
                     {
