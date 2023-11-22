@@ -2451,7 +2451,7 @@ u32 DevInterface(u32 param)
         if (keys & BUTTON_X)
         {
             uint8_t buff[0x200];
-            FileCreate("twl_cleancopts.bin", true);
+            FileCreate("ctr_backupcopts.bin", true);
             cmd[0] = 0x6D000000;
             cmd[1] = 0x00000000;
             NTR_SendCommand(cmd, 0, 55730, buff);
@@ -2534,24 +2534,23 @@ u32 DevInterface(u32 param)
             cmd[1] = 0x00000000;
             NTR_SendCommand(cmd, 512, 0x400000, &buff);
             Debug("Received data from 94h(nand): %08X", buff);
-            while (blk_num < 4096)
+            while (blk_num < 0x03B9C0)
             {
-                uint8_t buff[4];
-                current_blk = blk_num << 6;
+                uint8_t buffer[4];
                 NTR_Cmd9D(current_blk);
-                NTR_Cmd6F(&buff);
-                while ((buff[0] >> 6) == 0) //busy
+                NTR_Cmd6F(&buffer);
+                while (buffer[0] == 0x80) //busy
                 {
                     //poll again, change 6f to take a pointer as parameter or we will run out of mem
-                    NTR_Cmd6F(&buff);
-                    if ((buff[0] >> 6) == 1) //ready
+                    NTR_Cmd6F(&buffer);
+                    if ((buffer[0] >> 6) == 1) //ready
                     {
-                        if ((buff[0] >> 0) == 0) //pass
+                        if ((buffer[0] >> 0) == 0) //pass
                         {
                             //printf("Block %u has been erased!\n", blk_num);
                             break;
                         }
-                        else if ((buff[0] >> 0) == 1) //fail
+                        else if ((buffer[0] >> 0) == 1) //fail
                         {
                             printf("Bad block at block %u !\n", blk_num);
                             blk_num--; //decrement so that we break out of it, and increment back to the same block number
@@ -2561,7 +2560,7 @@ u32 DevInterface(u32 param)
                 }
                 if(blk_num % 100 == 0)
                     Debug("Block %d", blk_num);
-                blk_num++;
+                blk_num += 0x40;
             }
             Debug("Cartridge has been erased !");
             break;
@@ -2575,6 +2574,7 @@ u32 DevInterface(u32 param)
             u8 *copts = malloc(sizeof(u8) * 0x200);
             int i = 0;
             size_t curr_page = 0;
+            size_t curr_address = 0;
             u32 curr_offset = 0;
             u32 cmd_dummy[2] = {0x02000000, 0x00000000};
 
@@ -2582,19 +2582,20 @@ u32 DevInterface(u32 param)
             {
                 free(status);
                 free(buffer);
+                free(copts);
                 return 1;
             }
             size_t nb_pages = FileGetSize() / 0x2000;
             //Debug("Filesize is %ld bytes for %ld nb of pages", FileGetSize(), nb_pages);
             //NTR_ReadCopts(copts);
             //Debug("%08X", buff[196]);
-            //copts[196] = 0x0;
+            //copts[196] = 0x0; //0x3 is dev mode, 0x0 is retail mode
             while(curr_page < nb_pages) {
                 while(i < 16) {
-                    memset(buffer, '\0', 0x200);
+                    memset(buffer, 0xFF, 0x200);
                     FileRead(buffer, 0x200, curr_offset);
                     if (i == 0) {
-                        NTR_Cmd92(curr_page, buffer);
+                        NTR_Cmd92(curr_address, buffer);
                         i++;
                         curr_offset += 0x200;
                     }
@@ -2623,33 +2624,35 @@ u32 DevInterface(u32 param)
                         }
                     }
                 }
-                curr_page += 0x4;
+                curr_address += 0x4;
+                curr_page += 1;
                 i = 0;
             }
             /*
+
             NTR_Cmd91(copts);
             NTR_Cmd6F(&buff);
-            while ((buff[0] >> 6) == 0) //busy
+            while(buff[0] == 0x80)
             {
                 //poll again, change 6f to take a pointer as parameter or we will run out of mem
                 NTR_Cmd6F(&buff);
-                if ((buff[0] >> 6) == 1) //ready
+                if ((buff[0] >> 6) & 1 == 1) //ready
                 {
-                    if ((buff[0] >> 0) == 0) //pass
+                    if ((buff[0] >> 0) & 1 == 0) //pass
                     {
                         //Debug("Wrote header to cartridge !");
                         break;
                     }
-                    else if ((buff[0] >> 0) == 1) //fail
+                    else if ((buff[0] >> 0) & 1 == 1) //fail
                     {
                         printf("WE FUCKED UP");
                         break;
                     }
                 }
+                Debug("Waiting");
             }
             */
             Debug("Wrote block to cartridge !");
-
             break;
         }
 

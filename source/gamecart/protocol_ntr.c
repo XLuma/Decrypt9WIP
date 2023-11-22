@@ -216,7 +216,6 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
 
     u32 count = 0;
     u32 cardCtrl = REG_NTRCARDROMCNT;
-
     /*
     if(useBuf32)
     {
@@ -241,7 +240,7 @@ void NTR_SendCommandWrite(const u32 command[2], u32 pageSize, u32 latency, void*
             if (cardCtrl & NTRCARD_DATA_READY)
             {
                 pbuf32++;
-                Debug("%X", REG_NTRCARDFIFO);
+                //Debug("%X", REG_NTRCARDFIFO);
                 REG_NTRCARDFIFO = *pbuf32;
                 //Debug("%X", REG_NTRCARDFIFO);
                 //Debug("%08X", *pbuf32);
